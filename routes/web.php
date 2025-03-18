@@ -1,6 +1,8 @@
 <?php
 
+
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\Business\BusinessProfileController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -14,6 +16,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     })->name('dashboard');
     Route::resource('categories', CategoryController::class);
 });
+
+Route::resource('business',BusinessProfileController::class);
 
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';
