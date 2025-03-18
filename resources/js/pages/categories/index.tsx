@@ -1,7 +1,7 @@
 import * as React from 'react'
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import { Head } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -11,7 +11,6 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 /** react datatable  */
-import mockData from '../../../../public/data.json'
 
 import {
     createColumnHelper,
@@ -26,8 +25,6 @@ import {
 type Person = {
     id: number;
     name: string;
-    email: string;
-    phone: string;
 };
 
 const columnHelper = createColumnHelper<Person>();
@@ -39,20 +36,14 @@ const columns = [
     columnHelper.accessor('name', {
         cell: (info) => info.getValue(),
     }),
-    columnHelper.accessor((row) => row.email, {
-        id: 'email',
-        cell: (info) => <i>{info.getValue()}</i>,
-        header: () => <span>Email</span>,
-    }),
-    columnHelper.accessor('phone', {
-        header: () => 'Phone',
-        cell: (info) => info.renderValue(),
-    }),
 ];
 
 
 export default function CategoryIndex() {
-    const [data] = React.useState(() => [...mockData]);
+    const { props } = usePage();
+    const { categories } = props;
+
+    const [data] = React.useState(() => [...categories]);
     const [sorting, setSorting] = React.useState<SortingState>([]);
 
     const table = useReactTable({
@@ -75,6 +66,9 @@ export default function CategoryIndex() {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Categories" />
+            <div className="flex justify-end mt-2">
+                <Link href={route('categories.create')} className='text-white bg-blue-700 hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 font-medium rounded-full text-sm px-5 py-2.5 text-center me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 '> Create Category</Link>
+            </div>
             <div className="flex flex-col h-screen max-w-3xl mx-auto py-24">
                 <table className="border">
                     <thead>
@@ -127,7 +121,7 @@ export default function CategoryIndex() {
 
                 <div className="flex sm:flex-row flex-col w-full mt-8 items-center gap-2 text-xs">
                     <div className="sm:mr-auto sm:mb-0 mb-2">
-                        <span className="mr-2">Items por página</span>
+                        <span className="mr-2">Items per page</span>
                         <select
                             className="border p-1 rounded w-16 border-gray-200"
                             value={table.getState().pagination.pageSize}
@@ -135,7 +129,7 @@ export default function CategoryIndex() {
                                 table.setPageSize(Number(e.target.value));
                             }}
                         >
-                            {[5,10,15,20].map((pageSize) => (
+                            {[5, 10, 15, 20].map((pageSize) => (
                                 <option key={pageSize} value={pageSize}>
                                     {pageSize}
                                 </option>
@@ -145,8 +139,8 @@ export default function CategoryIndex() {
                     <div className="flex gap-2">
                         <button
                             className={`${!table.getCanPreviousPage()
-                                    ? 'bg-gray-100'
-                                    : 'hover:bg-gray-200 hover:curstor-pointer bg-gray-100'
+                                ? 'bg-gray-100'
+                                : 'hover:bg-gray-200 hover:curstor-pointer bg-gray-100'
                                 } rounded p-1`}
                             onClick={() => table.setPageIndex(0)}
                             disabled={!table.getCanPreviousPage()}
@@ -155,8 +149,8 @@ export default function CategoryIndex() {
                         </button>
                         <button
                             className={`${!table.getCanPreviousPage()
-                                    ? 'bg-gray-100'
-                                    : 'hover:bg-gray-200 hover:curstor-pointer bg-gray-100'
+                                ? 'bg-gray-100'
+                                : 'hover:bg-gray-200 hover:curstor-pointer bg-gray-100'
                                 } rounded p-1`}
                             onClick={() => table.previousPage()}
                             disabled={!table.getCanPreviousPage()}
@@ -179,8 +173,8 @@ export default function CategoryIndex() {
                         </span>
                         <button
                             className={`${!table.getCanNextPage()
-                                    ? 'bg-gray-100'
-                                    : 'hover:bg-gray-200 hover:curstor-pointer bg-gray-100'
+                                ? 'bg-gray-100'
+                                : 'hover:bg-gray-200 hover:curstor-pointer bg-gray-100'
                                 } rounded p-1`}
                             onClick={() => table.nextPage()}
                             disabled={!table.getCanNextPage()}
@@ -189,8 +183,8 @@ export default function CategoryIndex() {
                         </button>
                         <button
                             className={`${!table.getCanNextPage()
-                                    ? 'bg-gray-100'
-                                    : 'hover:bg-gray-200 hover:curstor-pointer bg-gray-100'
+                                ? 'bg-gray-100'
+                                : 'hover:bg-gray-200 hover:curstor-pointer bg-gray-100'
                                 } rounded p-1`}
                             onClick={() => table.setPageIndex(table.getPageCount() - 1)}
                             disabled={!table.getCanNextPage()}
