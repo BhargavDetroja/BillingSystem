@@ -1,199 +1,233 @@
-import * as React from 'react'
-import AppLayout from '@/layouts/app-layout';
-import { type BreadcrumbItem } from '@/types';
-import { Head, Link, usePage } from '@inertiajs/react';
+"use client";
 
-const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Categories',
-        href: '/categories',
-    },
-];
-
-/** react datatable  */
-
+import * as React from "react";
 import {
-    createColumnHelper,
-    flexRender,
-    getCoreRowModel,
-    useReactTable,
-    getSortedRowModel,
-    SortingState,
-    getPaginationRowModel,
-} from '@tanstack/react-table';
+  ColumnDef,
+  SortingState,
+  flexRender,
+  getCoreRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  useReactTable,
+} from "@tanstack/react-table";
+import { ArrowUpDown, Edit, Trash2 } from "lucide-react";
 
-type Person = {
-    id: number;
-    name: string;
+import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import AppLayout from "@/layouts/app-layout";
+import { Head, Link, usePage, router } from "@inertiajs/react";
+import { useEffect, useState } from "react";
+import FilterBar from "@/components/FilterBar"; // Import the FilterBar component
+import ConfirmationModal from "@/components/ConfirmationModal"; // Import the ConfirmationModal component
+
+type Category = {
+  id: number;
+  name: string;
 };
 
-const columnHelper = createColumnHelper<Person>();
+export const columns: ColumnDef<Category>[] = [
+  {
+    accessorKey: "name",
+    header: ({ column }) => (
+      <Button
+        variant="ghost"
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+      >
+        Name
+        <ArrowUpDown />
+      </Button>
+    ),
+    cell: ({ row }) => <div>{row.getValue("name")}</div>,
+  },
+  {
+    id: "actions",
+    header: "Actions",
+    enableHiding: false,
+    cell: ({ row }) => {
+      const category = row.original;
 
-const columns = [
-    columnHelper.accessor('id', {
-        cell: (info) => info.getValue(),
-    }),
-    columnHelper.accessor('name', {
-        cell: (info) => info.getValue(),
-    }),
+      return (
+        <div className="flex space-x-2">
+          {/* Edit Button */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => console.log(`Edit category: ${category.id}`)}
+          >
+            <span className="sr-only">Edit</span>
+            <Edit className="h-5 w-5" /> {/* Lucide Edit Icon */}
+          </Button>
+
+          {/* Delete Button */}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-red-500"
+            onClick={() => handleDelete(category.id)}
+          >
+            <span className="sr-only">Delete</span>
+            <Trash2 className="h-5 w-5" /> {/* Lucide Trash Icon */}
+          </Button>
+        </div>
+      );
+    },
+  },
 ];
 
-
 export default function CategoryIndex() {
-    const { props } = usePage();
-    const { categories } = props;
+  const { props } = usePage();
+  const { filters, categories } = props; // Initial filters and categories from the server
 
-    const [data] = React.useState(() => [...categories]);
-    const [sorting, setSorting] = React.useState<SortingState>([]);
+  const [search, setSearch] = useState(filters.search || ""); // State for search query
+  const [loading, setLoading] = useState(false); // State for loading indicator
+  const [isModalOpen, setIsModalOpen] = useState(false); // State for modal visibility
+  const [categoryIdToDelete, setCategoryIdToDelete] = useState<number | null>(null); // State for category ID to delete
 
-    const table = useReactTable({
-        data,
-        columns,
-        state: {
-            sorting,
+  const [sorting, setSorting] = React.useState<SortingState>([]);
+  const [rowSelection, setRowSelection] = React.useState({});
+
+  const table = useReactTable({
+    data: categories.data, // Use the paginated data
+    columns,
+    onSortingChange: setSorting,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    onRowSelectionChange: setRowSelection,
+    state: {
+      sorting,
+      rowSelection,
+    },
+  });
+
+
+
+  // Confirm delete action
+  const confirmDelete = () => {
+    if (categoryIdToDelete !== null) {
+      router.delete(route("categories.destroy", categoryIdToDelete), {
+        onSuccess: () => {
+          setIsModalOpen(false);
+          setCategoryIdToDelete(null);
         },
-        initialState: {
-            pagination: {
-                pageSize: 5,
-            },
-        },
-        getCoreRowModel: getCoreRowModel(),
-        onSortingChange: setSorting,
-        getSortedRowModel: getSortedRowModel(),
-        getPaginationRowModel: getPaginationRowModel()
-    });
+      });
+    }
+  };
 
-    return (
-        <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Categories" />
-            <div className="flex justify-end mt-2">
-                <Link href={route('categories.create')} className='text-white bg-blue-700 hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 font-medium rounded-full text-sm px-5 py-2.5 text-center me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 '> Create Category</Link>
-            </div>
-            <div className="flex flex-col h-screen max-w-3xl mx-auto py-24">
-                <table className="border">
-                    <thead>
-                        {table.getHeaderGroups().map((headerGroup) => (
-                            <tr
-                                key={headerGroup.id}
-                                className="border-b text-gray-800 uppercase"
-                            >
-                                {headerGroup.headers.map((header) => (
-                                    <th
-                                        key={header.id}
-                                        className="px-4 pr-2 py-4 font-medium text-left"
-                                    >
-                                        {header.isPlaceholder ? null : (
-                                            <div
-                                                {...{
-                                                    className: header.column.getCanSort()
-                                                        ? 'cursor-pointer select-none flex min-w-[36px]'
-                                                        : '',
-                                                    onClick: header.column.getToggleSortingHandler(),
-                                                }}
-                                            >
-                                                {flexRender(
-                                                    header.column.columnDef.header,
-                                                    header.getContext()
-                                                )}
-                                                {{
-                                                    asc: <span className="pl-2">↑</span>,
-                                                    desc: <span className="pl-2">↓</span>,
-                                                }[header.column.getIsSorted() as string] ?? null}
-                                            </div>
-                                        )}
-                                    </th>
-                                ))}
-                            </tr>
-                        ))}
-                    </thead>
-                    <tbody>
-                        {table.getRowModel().rows.map((row) => (
-                            <tr key={row.id} className="border-b">
-                                {row.getVisibleCells().map((cell) => (
-                                    <td key={cell.id} className="px-4 pt-[14px] pb-[18px]">
-                                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                    </td>
-                                ))}
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
+  // Handle pagination
+  const handlePreviousPage = () => {
+    if (categories.prev_page_url) {
+      router.get(categories.prev_page_url, {}, {
+        replace: true,
+        preserveState: true,
+      });
+    }
+  };
 
-                <div className="flex sm:flex-row flex-col w-full mt-8 items-center gap-2 text-xs">
-                    <div className="sm:mr-auto sm:mb-0 mb-2">
-                        <span className="mr-2">Items per page</span>
-                        <select
-                            className="border p-1 rounded w-16 border-gray-200"
-                            value={table.getState().pagination.pageSize}
-                            onChange={(e) => {
-                                table.setPageSize(Number(e.target.value));
-                            }}
-                        >
-                            {[5, 10, 15, 20].map((pageSize) => (
-                                <option key={pageSize} value={pageSize}>
-                                    {pageSize}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                    <div className="flex gap-2">
-                        <button
-                            className={`${!table.getCanPreviousPage()
-                                ? 'bg-gray-100'
-                                : 'hover:bg-gray-200 hover:curstor-pointer bg-gray-100'
-                                } rounded p-1`}
-                            onClick={() => table.setPageIndex(0)}
-                            disabled={!table.getCanPreviousPage()}
-                        >
-                            <span className="w-5 h-5">{'<<'}</span>
-                        </button>
-                        <button
-                            className={`${!table.getCanPreviousPage()
-                                ? 'bg-gray-100'
-                                : 'hover:bg-gray-200 hover:curstor-pointer bg-gray-100'
-                                } rounded p-1`}
-                            onClick={() => table.previousPage()}
-                            disabled={!table.getCanPreviousPage()}
-                        >
-                            <span className="w-5 h-5">{'<'}</span>
-                        </button>
-                        <span className="flex items-center gap-1">
-                            <input
-                                min={1}
-                                max={table.getPageCount()}
-                                type="number"
-                                value={table.getState().pagination.pageIndex + 1}
-                                onChange={(e) => {
-                                    const page = e.target.value ? Number(e.target.value) - 1 : 0;
-                                    table.setPageIndex(page);
-                                }}
-                                className="border p-1 rounded w-10"
-                            />
-                            de {table.getPageCount()}
-                        </span>
-                        <button
-                            className={`${!table.getCanNextPage()
-                                ? 'bg-gray-100'
-                                : 'hover:bg-gray-200 hover:curstor-pointer bg-gray-100'
-                                } rounded p-1`}
-                            onClick={() => table.nextPage()}
-                            disabled={!table.getCanNextPage()}
-                        >
-                            <span className="w-5 h-5">{'>'}</span>
-                        </button>
-                        <button
-                            className={`${!table.getCanNextPage()
-                                ? 'bg-gray-100'
-                                : 'hover:bg-gray-200 hover:curstor-pointer bg-gray-100'
-                                } rounded p-1`}
-                            onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-                            disabled={!table.getCanNextPage()}
-                        >
-                            <span className="w-5 h-5">{'>>'}</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </AppLayout>
-    );
+  const handleNextPage = () => {
+    if (categories.next_page_url) {
+      router.get(categories.next_page_url, {}, {
+        replace: true,
+        preserveState: true,
+      });
+    }
+  };
+
+  return (
+    <AppLayout>
+      <Head title="Categories" />
+      <div className="flex justify-end m-5">
+        <Link href={route("categories.create")}>
+          <Button>Create Category</Button>
+        </Link>
+      </div>
+      <div className="m-5">
+        <FilterBar /> {/* Use the FilterBar component */}
+        <div className="rounded-md border mt-4">
+          {loading ? (
+            <div className="text-center py-4">Loading...</div>
+          ) : (
+            <Table>
+              <TableHeader>
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <TableRow key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => (
+                      <TableHead key={header.id}>
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext()
+                            )}
+                      </TableHead>
+                    ))}
+                  </TableRow>
+                ))}
+              </TableHeader>
+              <TableBody>
+                {table.getRowModel().rows?.length ? (
+                  table.getRowModel().rows.map((row) => (
+                    <TableRow
+                      key={row.id}
+                      data-state={row.getIsSelected() && "selected"}
+                    >
+                      {row.getVisibleCells().map((cell) => (
+                        <TableCell key={cell.id}>
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext()
+                          )}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={columns.length} className="h-24 text-center">
+                      No results.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          )}
+        </div>
+        <div className="flex items-center justify-between py-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handlePreviousPage}
+            disabled={!categories.prev_page_url}
+          >
+            Previous
+          </Button>
+          <span className="text-sm text-muted-foreground">
+            Page {categories.current_page} of {categories.last_page}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleNextPage}
+            disabled={!categories.next_page_url}
+          >
+            Next
+          </Button>
+        </div>
+      </div>
+      <ConfirmationModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onConfirm={confirmDelete}
+        title="Confirm Delete"
+        message="Are you sure you want to delete this category?"
+      />
+    </AppLayout>
+  );
 }
