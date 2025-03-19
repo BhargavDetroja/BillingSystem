@@ -12,6 +12,10 @@ import { Button } from '@/components/ui/button';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
+        title: 'Categories',
+        href: '/categories',
+    },
+    {
         title: 'Create Categories',
         href: '/categories/create',
     },
@@ -37,10 +41,10 @@ export default function CreateCategory() {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Categories" />
             <div className="flex justify-end">
-                <Link href={route('categories.index')} className='text text-indigo-400'> Back </Link>
+                {/* <Link href={route('categories.index')} className='text'> Back </Link> */}
             </div>
             <div className="flex justify-center items-center">
-                <form className="flex flex-col gap-6 w-full max-w-md p-6 bg-white rounded-lg shadow-md border border-gray-300" onSubmit={submit}>
+                <form className="flex mt-5 flex-col gap-6 w-full max-w-md p-6  rounded-lg shadow-md border " onSubmit={submit}>
                     <div className="grid gap-6">
                         <div className="grid gap-2">
                             <Label htmlFor="Name"> Name </Label>

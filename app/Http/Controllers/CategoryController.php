@@ -14,10 +14,18 @@ class CategoryController extends Controller
      */
     public function index(Request $request)
     {
-        // dd($request->all());
-        $category = Category::limit(10)->get();
+        $query = Category::query();
+
+        // Check if a search query is provided
+        if ($request->has('search') && $request->search) {
+            $query->where('name', 'like', '%' . $request->search . '%');
+        }
+
+        $categories = $query->paginate(10)->withQueryString(); // Paginate with search query
+
         return Inertia::render('categories/index', [
-            'categories' => $category
+            'filters' => $request->only('search'), // Pass the search query back to the frontend
+            'categories' => $categories,
         ]);
     }
 
@@ -68,5 +76,22 @@ class CategoryController extends Controller
     public function destroy(string $id)
     {
         //
+    }
+
+    /**
+     * Fetch categories with search and pagination.
+     */
+    public function fetchCategories(Request $request)
+    {
+        $query = Category::query();
+
+        // Apply search filter
+        if ($request->has('search') && $request->search) {
+            $query->where('name', 'like', '%' . $request->search . '%');
+        }
+
+        $categories = $query->paginate(10); // Paginate with 10 items per page
+
+        return response()->json($categories); // Return JSON response
     }
 }
