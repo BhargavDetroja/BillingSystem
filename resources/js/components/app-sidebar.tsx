@@ -29,6 +29,11 @@ const mainNavItems: NavItem[] = [
         href: '/transports',
         icon: Truck,
     },
+    {
+        title: 'Parties',
+        href: '/parties',
+        icon: BriefcaseBusiness,
+    }
 ];
 
 const footerNavItems: NavItem[] = [
