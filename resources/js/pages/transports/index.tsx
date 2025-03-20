@@ -24,16 +24,24 @@ import {
 import AppLayout from "@/layouts/app-layout";
 import { Head, Link, router } from "@inertiajs/react";
 import { useState } from "react";
-import FilterBar from "@/components/FilterBar"; // Import the FilterBar component
-import ConfirmationModal from "@/components/ConfirmationModal"; // Import the ConfirmationModal component
+import FilterBar from "@/components/FilterBar";
+import ConfirmationModal from "@/components/ConfirmationModal";
 
-type Category = {
+type Transport = {
     id: number;
-    name: string;
+    transport_id: string | null;
+    name: string | null;
+    address: string | null;
+    mobile_number: string | null;
+    gst_no: string | null;
+    status: string | null;
+    created_at: string;
+    updated_at: string;
 };
 
 type Filters = {
     search?: string;
+    status?: string;
 };
 
 type PaginatedData<T> = {
@@ -46,43 +54,70 @@ type PaginatedData<T> = {
 
 interface PageProps {
     filters: Filters;
-    categories: PaginatedData<Category>;
+    transports: PaginatedData<Transport>;
 }
 
-export default function CategoryIndex({ filters, categories }: PageProps) {
-    const [search, setSearch] = useState<string>(filters.search || ""); // State for search query
-    const [loading, setLoading] = useState(false); // State for loading indicator
-    const [isModalOpen, setIsModalOpen] = useState(false); // State for modal visibility
-    const [categoryIdToDelete, setCategoryIdToDelete] = useState<number | null>(null); // State for category ID to delete
+export default function TransportIndex({ filters, transports }: PageProps) {
+    const [search, setSearch] = useState<string>(filters.search || "");
+    const [loading, setLoading] = useState(false);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [transportIdToDelete, setTransportIdToDelete] = useState<number | null>(null);
 
     const [sorting, setSorting] = React.useState<SortingState>([]);
     const [rowSelection, setRowSelection] = React.useState({});
 
     // Define the handleDelete function
     const handleDelete = (id: number) => {
-        setCategoryIdToDelete(id);
+        setTransportIdToDelete(id);
         setIsModalOpen(true);
     };
 
     // Navigate to edit page
     const handleEdit = (id: number) => {
-        router.visit(route("categories.edit", id));
+        router.visit(route("transports.edit", id));
     };
 
     // Confirm delete action
     const confirmDelete = () => {
-        if (categoryIdToDelete !== null) {
-            router.delete(route("categories.destroy", categoryIdToDelete), {
+        if (transportIdToDelete !== null) {
+            router.delete(route("transports.destroy", transportIdToDelete), {
                 onSuccess: () => {
                     setIsModalOpen(false);
-                    setCategoryIdToDelete(null);
+                    setTransportIdToDelete(null);
                 },
             });
         }
     };
 
-    // Define columns inside the component to have access to handleDelete
-    const columns: ColumnDef<Category>[] = [
+    // Format status for display
+    // const getStatusLabel = (status: string | null) => {
+    //     if (status === "1") return "Active";
+    //     if (status === "0") return "Inactive";
+    //     return status;
+    // };
+
+    // Format status style
+    // const getStatusStyle = (status: string | null) => {
+    //     if (status === "1") return "bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium";
+    //     if (status === "0") return "bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-medium";
+    //     return "bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs font-medium";
+    // };
+
+    // Define columns inside the component
+    const columns: ColumnDef<Transport>[] = [
+        {
+            accessorKey: "transport_id",
+            header: ({ column }) => (
+                <Button
+                    variant="ghost"
+                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                >
+                    ID
+                    <ArrowUpDown className="ml-2 h-4 w-4" />
+                </Button>
+            ),
+            cell: ({ row }) => <div>{row.getValue("transport_id") || "—"}</div>,
+        },
         {
             accessorKey: "name",
             header: ({ column }) => (
@@ -94,14 +129,42 @@ export default function CategoryIndex({ filters, categories }: PageProps) {
                     <ArrowUpDown className="ml-2 h-4 w-4" />
                 </Button>
             ),
-            cell: ({ row }) => <div>{row.getValue("name")}</div>,
+            cell: ({ row }) => <div className="font-medium">{row.getValue("name") || "—"}</div>,
         },
+        {
+            accessorKey: "address",
+            header: "Address",
+            cell: ({ row }) => (
+                <div className="max-w-[200px] truncate" title={row.getValue("address")}>
+                    {row.getValue("address") || "—"}
+                </div>
+            ),
+        },
+        {
+            accessorKey: "mobile_number",
+            header: "Mobile Number",
+            cell: ({ row }) => <div>{row.getValue("mobile_number") || "—"}</div>,
+        },
+        {
+            accessorKey: "gst_no",
+            header: "GST No.",
+            cell: ({ row }) => <div>{row.getValue("gst_no") || "—"}</div>,
+        },
+        // {
+        //     accessorKey: "status",
+        //     header: "Status",
+        //     cell: ({ row }) => (
+        //         <div className={getStatusStyle(row.getValue("status"))}>
+        //             {getStatusLabel(row.getValue("status"))}
+        //         </div>
+        //     ),
+        // },
         {
             id: "actions",
             header: "Actions",
             enableHiding: false,
             cell: ({ row }) => {
-                const category = row.original;
+                const transport = row.original;
 
                 return (
                     <div className="flex space-x-2">
@@ -109,10 +172,10 @@ export default function CategoryIndex({ filters, categories }: PageProps) {
                         <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => handleEdit(category.id)}
+                            onClick={() => handleEdit(transport.id)}
                         >
                             <span className="sr-only">Edit</span>
-                            <Edit className="h-5 w-5" /> {/* Lucide Edit Icon */}
+                            <Edit className="h-5 w-5" />
                         </Button>
 
                         {/* Delete Button */}
@@ -120,10 +183,10 @@ export default function CategoryIndex({ filters, categories }: PageProps) {
                             variant="ghost"
                             size="sm"
                             className="text-red-500"
-                            onClick={() => handleDelete(category.id)}
+                            onClick={() => handleDelete(transport.id)}
                         >
                             <span className="sr-only">Delete</span>
-                            <Trash2 className="h-5 w-5" /> {/* Lucide Trash Icon */}
+                            <Trash2 className="h-5 w-5" />
                         </Button>
                     </div>
                 );
@@ -132,7 +195,7 @@ export default function CategoryIndex({ filters, categories }: PageProps) {
     ];
 
     const table = useReactTable({
-        data: categories.data, // Use the paginated data
+        data: transports.data,
         columns,
         onSortingChange: setSorting,
         getCoreRowModel: getCoreRowModel(),
@@ -147,8 +210,8 @@ export default function CategoryIndex({ filters, categories }: PageProps) {
 
     // Handle pagination
     const handlePreviousPage = () => {
-        if (categories.prev_page_url) {
-            router.get(categories.prev_page_url, {}, {
+        if (transports.prev_page_url) {
+            router.get(transports.prev_page_url, {}, {
                 replace: true,
                 preserveState: true,
             });
@@ -156,8 +219,8 @@ export default function CategoryIndex({ filters, categories }: PageProps) {
     };
 
     const handleNextPage = () => {
-        if (categories.next_page_url) {
-            router.get(categories.next_page_url, {}, {
+        if (transports.next_page_url) {
+            router.get(transports.next_page_url, {}, {
                 replace: true,
                 preserveState: true,
             });
@@ -166,14 +229,14 @@ export default function CategoryIndex({ filters, categories }: PageProps) {
 
     return (
         <AppLayout>
-            <Head title="Categories" />
+            <Head title="Transport Providers" />
             <div className="flex justify-end m-5">
-                <Link href={route("categories.create")}>
-                    <Button>Create Category</Button>
+                <Link href={route("transports.create")}>
+                    <Button>Add Transport</Button>
                 </Link>
             </div>
             <div className="m-5">
-                <FilterBar /> {/* Use the FilterBar component */}
+                <FilterBar />
                 <div className="rounded-md border mt-4">
                     {loading ? (
                         <div className="text-center py-4">Loading...</div>
@@ -228,18 +291,18 @@ export default function CategoryIndex({ filters, categories }: PageProps) {
                         variant="outline"
                         size="sm"
                         onClick={handlePreviousPage}
-                        disabled={!categories.prev_page_url}
+                        disabled={!transports.prev_page_url}
                     >
                         Previous
                     </Button>
                     <span className="text-sm text-muted-foreground">
-                        Page {categories.current_page} of {categories.last_page}
+                        Page {transports.current_page} of {transports.last_page}
                     </span>
                     <Button
                         variant="outline"
                         size="sm"
                         onClick={handleNextPage}
-                        disabled={!categories.next_page_url}
+                        disabled={!transports.next_page_url}
                     >
                         Next
                     </Button>
@@ -250,7 +313,7 @@ export default function CategoryIndex({ filters, categories }: PageProps) {
                 onClose={() => setIsModalOpen(false)}
                 onConfirm={confirmDelete}
                 title="Confirm Delete"
-                message="Are you sure you want to delete this category?"
+                message="Are you sure you want to delete this transport provider?"
             />
         </AppLayout>
     );

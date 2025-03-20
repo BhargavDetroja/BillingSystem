@@ -39,7 +39,6 @@ return new class extends Migration
             $table->float("percentage")->nullable();
             $table->string("gst")->nullable();
 
-            $table->string("shipping_to")->nullable();
             $table->string("notes")->nullable();
 
             $table->timestamps();
