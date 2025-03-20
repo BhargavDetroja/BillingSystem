@@ -43,7 +43,7 @@ class CategoryController extends Controller
     public function store(CategoryRequest $request)
     {
         Category::create($request->validated());
-        return to_route('categories.index');
+        return to_route('categories.index')->with('success', 'Category created successfully.');
     }
 
     /**
