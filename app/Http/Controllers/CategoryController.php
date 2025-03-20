@@ -34,7 +34,7 @@ class CategoryController extends Controller
      */
     public function create()
     {
-        return Inertia::render('categories/create');
+        return Inertia::render('categories/create_edit');
     }
 
     /**
@@ -59,7 +59,10 @@ class CategoryController extends Controller
      */
     public function edit(string $id)
     {
-        //
+        $category = Category::findOrFail($id);
+        return Inertia::render('categories/create_edit', [
+            'category' => $category,
+        ]);
     }
 
     /**
@@ -67,7 +70,12 @@ class CategoryController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        $category = Category::findOrFail($id);
+        $category->update($request->validate([
+            'name' => 'required|string|max:255',
+        ]));
+
+        return to_route('categories.index')->with('success', 'Category updated successfully.');
     }
 
     /**
@@ -75,7 +83,10 @@ class CategoryController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        $category = Category::findOrFail($id);
+        $category->delete();
+
+        return to_route('categories.index')->with('success', 'Category deleted successfully.');
     }
 
     /**
