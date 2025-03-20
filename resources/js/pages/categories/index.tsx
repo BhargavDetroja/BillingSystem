@@ -49,9 +49,9 @@ interface PageProps {
     categories: PaginatedData<Category>;
 }
 
-export default function CategoryIndex({ filters, categories }: PageProps) {
-    const [search, setSearch] = useState<string>(filters.search || ""); // State for search query
-    const [loading, setLoading] = useState(false); // State for loading indicator
+export default function CategoryIndex({ categories }: PageProps) {
+    // const [search, setSearch] = useState<string>(filters.search || ""); // State for search query
+    const [loading] = useState(false); // State for loading indicator
     const [isModalOpen, setIsModalOpen] = useState(false); // State for modal visibility
     const [categoryIdToDelete, setCategoryIdToDelete] = useState<number | null>(null); // State for category ID to delete
 

@@ -64,9 +64,9 @@ interface PageProps {
     categories: Array<{ id: number; name: string }>;
 }
 
-export default function ProductIndex({ filters, products, categories }: PageProps) {
-    const [search, setSearch] = useState<string>(filters.search || "");
-    const [loading, setLoading] = useState(false);
+export default function ProductIndex({  products, categories }: PageProps) {
+    // const [search, setSearch] = useState<string>(filters.search || "");
+    const [loading] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [productIdToDelete, setProductIdToDelete] = useState<number | null>(null);
 
