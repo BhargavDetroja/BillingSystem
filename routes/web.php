@@ -3,6 +3,8 @@
 
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\Business\BusinessProfileController;
+use App\Http\Controllers\ProductController;
+use App\Http\Controllers\TransportController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -15,6 +17,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return Inertia::render('dashboard');
     })->name('dashboard');
     Route::resource('categories', CategoryController::class);
+    Route::resource('products', ProductController::class);
+    Route::resource("transports", TransportController::class);
+
 });
 
 Route::resource('business',BusinessProfileController::class);
