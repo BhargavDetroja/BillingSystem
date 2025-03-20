@@ -57,9 +57,9 @@ interface PageProps {
     transports: PaginatedData<Transport>;
 }
 
-export default function TransportIndex({ filters, transports }: PageProps) {
-    const [search, setSearch] = useState<string>(filters.search || "");
-    const [loading, setLoading] = useState(false);
+export default function TransportIndex({ transports }: PageProps) {
+    // const [search, setSearch] = useState<string>(filters.search || "");
+    const [loading] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [transportIdToDelete, setTransportIdToDelete] = useState<number | null>(null);
 
